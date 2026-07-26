@@ -6,6 +6,7 @@ import sys
 
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -17,7 +18,6 @@ import report_generator as report
 
 load_dotenv()
 
-# Kurumsal Loglama: Hem dosyaya hem de Docker'in okuyabilecegi ana sisteme (stdout) yazdirilir.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -29,13 +29,45 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# AWS bolgesini dinamik hale getirdik. Cevresel degisken yoksa global standart us-east-1 kullanilir.
 TARGET_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
+tags_metadata = [
+    {"name": "System", "description": "Altyapi ve saglik kontrolu uclari."},
+    {"name": "Dashboard", "description": "Kullanici arayuzu ve istatistik paneli."},
+    {
+        "name": "Security Scans",
+        "description": "Otonom bulut guvenlik ve israf analiz motoru.",
+    },
+    {
+        "name": "Remediation & Reports",
+        "description": "Otomatik Terraform ve HTML rapor uretimi.",
+    },
+]
+
 app = FastAPI(
-    title="CloudSec Sentinel API",
-    description="Bulut Güvenlik ve Maliyet Optimizasyonu Otomasyon Motoru",
+    title="CloudSec Sentinel Enterprise API",
+    description="""
+    **Otonom Bulut Güvenlik ve Maliyet Optimizasyonu Motoru.**
+    Bu API, AWS ortamlarindaki S3 sizintilarini ve EBS/EIP israflarini otonom olarak tespit eder,
+    ardindan aninda Terraform cozumleri ve yonetici raporlari uretir.
+    """,
     version="1.0.0",
+    contact={
+        "name": "Ertunc",
+        "url": "https://github.com/ertunckilic/CloudSec-Sentinel",
+    },
+    license_info={
+        "name": "MIT License",
+    },
+    openapi_tags=tags_metadata,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 templates = Jinja2Templates(directory="templates")
@@ -90,7 +122,6 @@ def perform_background_scan(customer_name: str, role_arn: str, external_id: str)
         except Exception as e:  # noqa: BLE001
             logger.error(f"[{scan_id}] Kritik S3 Taramasi Hatasi: {e}")
 
-        # Tarama motorlari artik dinamik bolge (TARGET_REGION) ile calisiyor
         core.scan_ebs_waste(session, conn, scan_id, region=TARGET_REGION)
         core.scan_eip_waste(session, conn, scan_id, region=TARGET_REGION)
 
@@ -102,7 +133,12 @@ def perform_background_scan(customer_name: str, role_arn: str, external_id: str)
         logger.error(f"Arka plan gorevi cokerken yakalandi: {e}")
 
 
-@app.get("/")
+@app.get("/health", tags=["System"])
+def health_check():
+    return {"status": "healthy", "version": "1.0.0", "engine": "CloudSec Sentinel"}
+
+
+@app.get("/", tags=["Dashboard"])
 def read_dashboard(request: Request, username: str = Depends(verify_credentials)):
     conn = sqlite3.connect("sentinel_core.db")
     cursor = conn.cursor()
@@ -137,7 +173,7 @@ def read_dashboard(request: Request, username: str = Depends(verify_credentials)
     )
 
 
-@app.post("/api/v1/scan")
+@app.post("/api/v1/scan", tags=["Security Scans"])
 def start_cloud_scan(
     request: ScanRequest,
     background_tasks: BackgroundTasks,
@@ -155,13 +191,13 @@ def start_cloud_scan(
     }
 
 
-@app.get("/api/v1/generate-report")
+@app.get("/api/v1/generate-report", tags=["Remediation & Reports"])
 def generate_html(username: str = Depends(verify_credentials)):
     report.generate_html_report()
     return {"status": "success", "message": "HTML raporu olusturuldu"}
 
 
-@app.get("/api/v1/generate-remediation")
+@app.get("/api/v1/generate-remediation", tags=["Remediation & Reports"])
 def generate_tf(username: str = Depends(verify_credentials)):
     tf_gen.generate_terraform_remediation()
     return {"status": "success", "message": "Terraform duzeltme scripti uretildi"}
