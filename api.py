@@ -2,6 +2,7 @@ import logging
 import os
 import secrets
 import sqlite3
+import sys
 
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
@@ -16,14 +17,20 @@ import report_generator as report
 
 load_dotenv()
 
+# Kurumsal Loglama: Hem dosyaya hem de Docker'in okuyabilecegi ana sisteme (stdout) yazdirilir.
 logging.basicConfig(
-    filename="sentinel_api.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler("sentinel_api.log"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
-# Ruff LOG015 Cozumu: Kök log yerine projeye ozel isimlendirilmis logger kullanimi
 logger = logging.getLogger(__name__)
+
+# AWS bolgesini dinamik hale getirdik. Cevresel degisken yoksa global standart us-east-1 kullanilir.
+TARGET_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
 app = FastAPI(
     title="CloudSec Sentinel API",
@@ -35,7 +42,6 @@ templates = Jinja2Templates(directory="templates")
 security = HTTPBasic()
 
 
-# Ruff B008 Cozumu: FastAPI'nin dogasinda olan Depends kullanimini bilerek yoksayiyoruz (noqa)
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):  # noqa: B008
     correct_username = secrets.compare_digest(
         credentials.username, os.getenv("ADMIN_USER", "admin")
@@ -82,15 +88,15 @@ def perform_background_scan(customer_name: str, role_arn: str, external_id: str)
                 if is_secure is False:
                     core.check_s3_data_leak(s3, bucket_name, conn, scan_id)
         except Exception as e:  # noqa: BLE001
-            # Ruff BLE001 Cozumu: Arka plan gorevinin cökmemesi icin genel hatayi bilerek yakaliyoruz
             logger.error(f"[{scan_id}] Kritik S3 Taramasi Hatasi: {e}")
 
-        core.scan_ebs_waste(session, conn, scan_id, region="eu-central-1")
-        core.scan_eip_waste(session, conn, scan_id, region="eu-central-1")
+        # Tarama motorlari artik dinamik bolge (TARGET_REGION) ile calisiyor
+        core.scan_ebs_waste(session, conn, scan_id, region=TARGET_REGION)
+        core.scan_eip_waste(session, conn, scan_id, region=TARGET_REGION)
 
         conn.close()
         logger.info(
-            f"[{scan_id}] {customer_name} taramasi basariyla tamamlandi ve veritabanina islendi."
+            f"[{scan_id}] {customer_name} taramasi {TARGET_REGION} bolgesinde basariyla tamamlandi."
         )
     except Exception as e:  # noqa: BLE001
         logger.error(f"Arka plan gorevi cokerken yakalandi: {e}")
