@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSec Sentinel | Kurumsal Yönetim Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        primary: '#3b82f6',
+                        accent: '#10b981',
+                        danger: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkbg text-slate-300 font-sans antialiased">
+
+    <!-- Üst Menü -->
+    <nav class="bg-cardbg border-b border-slate-700 p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-shield-halved text-primary text-3xl"></i>
+                <span class="text-2xl font-bold text-white tracking-wider">CloudSec <span class="text-primary">Sentinel</span></span>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="downloadReport()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                    <i class="fa-solid fa-file-pdf mr-2 text-red-400"></i> Rapor İndir
+                </button>
+                <button onclick="downloadRemediation()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                    <i class="fa-solid fa-code mr-2 text-accent"></i> Fix İndir (.tf)
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Ana İçerik -->
+    <div class="container mx-auto mt-8 px-4 pb-12">
+
+        <!-- İstatistik Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-cardbg rounded-xl p-6 border border-slate-700 shadow-xl border-l-4 border-l-primary">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase font-bold mb-1 tracking-widest">Toplam Tarama</p>
+                        <h3 class="text-3xl font-bold text-white">{{ stats.total_scans }}</h3>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-lg text-primary"><i class="fa-solid fa-radar text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-cardbg rounded-xl p-6 border border-slate-700 shadow-xl border-l-4 border-l-danger">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase font-bold mb-1 tracking-widest">Açık Zafiyetler</p>
+                        <h3 class="text-3xl font-bold text-white">{{ stats.total_vulns }}</h3>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-lg text-danger"><i class="fa-solid fa-bug text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-cardbg rounded-xl p-6 border border-slate-700 shadow-xl border-l-4 border-l-accent">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-slate-400 text-xs uppercase font-bold mb-1 tracking-widest">Aylık İsraf</p>
+                        <h3 class="text-3xl font-bold text-white">${{ "%.2f"|format(stats.total_waste) }}</h3>
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-lg text-accent"><i class="fa-solid fa-money-bill-wave text-xl"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Sol Sütun: Tarama Paneli -->
+            <div class="lg:col-span-1 space-y-8">
+                <!-- Canlı Tarama Motoru -->
+                <div class="bg-cardbg p-6 rounded-xl border border-slate-700 shadow-xl">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-600 pb-2"><i class="fa-solid fa-crosshairs mr-2 text-primary"></i>Yeni Hedef Tara</h2>
+
+                    <form id="scanForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Şirket / Müşteri Adı</label>
+                            <input type="text" id="customerName" required placeholder="Örn: Startup_X" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">IAM Role ARN</label>
+                            <input type="text" id="roleArn" required placeholder="arn:aws:iam::..." class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-mono text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">External ID (Güvenlik Kilidi)</label>
+                            <input type="text" id="externalId" value="Sentinel-Super-Secret-ID-2026" required class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition font-mono text-sm">
+                        </div>
+
+                        <button type="submit" id="scanBtn" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center mt-2">
+                            <span id="btnText"><i class="fa-solid fa-play mr-2"></i> Taramayı Başlat</span>
+                            <svg id="btnSpinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <div id="scanStatus" class="mt-4 text-sm font-medium hidden p-3 rounded-lg"></div>
+                </div>
+
+                <!-- Sistem Sağlığı Grafiği -->
+                <div class="bg-cardbg p-6 rounded-xl border border-slate-700 shadow-xl">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-600 pb-2"><i class="fa-solid fa-chart-pie mr-2 text-accent"></i>Sistem Sağlığı</h2>
+                    <div class="relative h-48 w-full flex justify-center">
+                        <canvas id="healthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Sütun: Son Taramalar Tablosu -->
+            <div class="lg:col-span-2">
+                <div class="bg-cardbg p-6 rounded-xl border border-slate-700 shadow-xl h-full">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-slate-600 pb-2"><i class="fa-solid fa-database mr-2 text-primary"></i>Veritabanı Logları (Son 5 Oturum)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-800 text-slate-300">
+                                <tr>
+                                    <th class="p-4 rounded-tl-lg font-semibold">Oturum ID</th>
+                                    <th class="p-4 font-semibold">Şirket Adı</th>
+                                    <th class="p-4 font-semibold">Tarih / Zaman Damgası</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for scan in recent_scans %}
+                                <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                                    <td class="p-4 text-primary font-mono font-bold">#{{ scan[0] }}</td>
+                                    <td class="p-4 text-white font-medium">{{ scan[2] }}</td>
+                                    <td class="p-4 text-slate-400 font-mono text-xs">{{ scan[1] }}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="3" class="p-8 text-center text-slate-500 italic">Veritabanında henüz bir kayıt bulunmuyor.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Grafik Başlatma (Chart.js)
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        const vulns = {{ stats.total_vulns }};
+        const secure_score = vulns === 0 ? 100 : Math.max(0, 100 - (vulns * 10));
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Güvenli', 'Riskli'],
+                datasets: [{
+                    data: [secure_score, 100 - secure_score],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: {family: "'Segoe UI', sans-serif"} } }
+                },
+                cutout: '75%'
+            }
+        });
+
+        // Tarama Formu (Fetch API) Entegrasyonu
+        document.getElementById('scanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('scanBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const statusDiv = document.getElementById('scanStatus');
+
+            // Buton durumunu "Yükleniyor" yap
+            btn.disabled = true;
+            btn.classList.replace('bg-primary', 'bg-slate-600');
+            btnText.innerHTML = "Analiz Ediliyor...";
+            btnSpinner.classList.remove('hidden');
+            statusDiv.classList.add('hidden');
+
+            const payload = {
+                customer_name: document.getElementById('customerName').value,
+                role_arn: document.getElementById('roleArn').value,
+                external_id: document.getElementById('externalId').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if(response.ok) {
+                    statusDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i>${data.message}`;
+                    statusDiv.className = "mt-4 text-sm font-medium p-3 rounded-lg bg-emerald-900/50 text-emerald-400 border border-emerald-800";
+                    setTimeout(() => window.location.reload(), 2000); // Ekranı 2 saniye sonra yenile
+                } else {
+                    statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i>Hata: ${data.detail}`;
+                    statusDiv.className = "mt-4 text-sm font-medium p-3 rounded-lg bg-red-900/50 text-red-400 border border-red-800";
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i>Bağlantı hatası oluştu.`;
+                statusDiv.className = "mt-4 text-sm font-medium p-3 rounded-lg bg-red-900/50 text-red-400 border border-red-800";
+            } finally {
+                btn.disabled = false;
+                btn.classList.replace('bg-slate-600', 'bg-primary');
+                btnText.innerHTML = "<i class='fa-solid fa-play mr-2'></i> Taramayı Başlat";
+                btnSpinner.classList.add('hidden');
+                statusDiv.classList.remove('hidden');
+            }
+        });
+
+        // Rapor Oluşturma İstekleri
+        async function downloadReport() {
+            await fetch('/api/v1/generate-report');
+            alert("Rapor başarıyla oluşturuldu! Proje klasöründeki 'rapor_onizleme.html' dosyasına göz atın.");
+        }
+
+        async function downloadRemediation() {
+            await fetch('/api/v1/generate-remediation');
+            alert("Terraform düzeltme kodu üretildi! Proje klasöründeki 'remediation_fix.tf' dosyasını inceleyin.");
+        }
+    </script>
+</body>
+</html>

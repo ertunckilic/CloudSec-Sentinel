@@ -1,0 +1,18 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="undetected-chromedriver" />
+          <option value="selenium" />
+          <option value="ultralytics" />
+          <option value="aiohttp" />
+          <option value="opencv-python-headless" />
+          <option value="tqdm" />
+          <option value="numpy" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

@@ -1,0 +1,21 @@
+# Çevre Değişkenleri ve Sırlar
+.env
+
+# Sanal Ortam
+.venv/
+venv/
+env/
+
+# Veritabanı ve Kara Kutu Logları (Konteyner her açıldığında sıfırdan oluşturulmalı)
+*.db
+*.sqlite3
+*.log
+
+# Python Ön Bellek
+__pycache__/
+*.pyc
+
+# Dinamik Üretilen Çıktılar
+rapor_onizleme.html
+remediation_fix.tf
+*.pdf
