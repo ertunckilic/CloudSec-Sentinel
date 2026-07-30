@@ -15,6 +15,7 @@ import cloudsec_core as core
 import database_manager as db
 import remediation_generator as tf_gen
 import report_generator as report
+from enterprise_auth import verify_enterprise_license
 
 load_dotenv()
 
@@ -41,6 +42,10 @@ tags_metadata = [
     {
         "name": "Remediation & Reports",
         "description": "Otomatik Terraform ve HTML rapor uretimi.",
+    },
+    {
+        "name": "Enterprise",
+        "description": "Kurumsal lisans gerektiren ozel raporlama ve SLA servisleri.",
     },
 ]
 
@@ -201,3 +206,16 @@ def generate_html(username: str = Depends(verify_credentials)):
 def generate_tf(username: str = Depends(verify_credentials)):
     tf_gen.generate_terraform_remediation()
     return {"status": "success", "message": "Terraform duzeltme scripti uretildi"}
+
+
+@app.get(
+    "/api/v1/enterprise/compliance-report",
+    tags=["Enterprise"],
+    dependencies=[Depends(verify_enterprise_license)],
+)
+def generate_soc2_compliance_report():
+    return {
+        "status": "success",
+        "report_type": "SOC2/ISO27001",
+        "data": "Enterprise compliance data generated securely.",
+    }
