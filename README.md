@@ -1,64 +1,34 @@
 # CloudSec Sentinel
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Security Scan](https://img.shields.io/badge/security-bandit-green)
-![Python Version](https://img.shields.io/badge/python-3.12-blue)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
 **Enterprise-Grade Autonomous Cloud Security & Cost Optimization Engine**
 
-CloudSec Sentinel is a highly advanced, zero-touch SaaS platform designed to autonomously detect critical security vulnerabilities and infrastructure waste across AWS environments. Upon detection, it instantly generates deployable Terraform (`.tf`) remediation scripts and executive-ready reports.
+CloudSec Sentinel is a zero-touch DevSecOps platform designed to autonomously detect critical security vulnerabilities and infrastructure waste across enterprise AWS environments. Moving beyond passive alerting, it actively generates deployable infrastructure-as-code to remediate risks instantly.
 
-## Key Features
+## Executive Value
+- **Risk Mitigation:** Autonomously detects S3 data leak vectors and IAM privilege escalations before threat actors do.
+- **Cost Optimization:** Identifies unattached EBS volumes and idle Elastic IPs, instantly halting AWS infrastructure waste.
+- **Zero-Touch Remediation:** Dynamically generates exact Terraform (.tf) patches to secure vulnerabilities in seconds.
 
-*   **Autonomous S3 Auditing:** Deep scanning of bucket policies, Public Access Blocks, and potential data leak vectors.
-*   **Cost Optimization Engine:** Identifies unattached EBS volumes and idle Elastic IPs, instantly calculating monthly infrastructure waste.
-*   **Infrastructure as Code (IaC) Remediation:** Dynamically generates precise `.tf` code to instantly patch discovered vulnerabilities.
-*   **Asynchronous Processing:** Heavy cloud scans are securely executed in the background via FastAPI background tasks, ensuring zero UI blocking.
-*   **Enterprise Security:** Core API and Dashboard are shielded by strictly implemented HTTP Basic Authentication and .env secret management.
+## Core Architecture & Enterprise Security
+CloudSec Sentinel is built for enterprise-scale reliability and strict compliance:
+- **Autonomous DevSecOps Pipeline:** Fully integrated CI/CD via GitHub Actions.
+- **Quality Gates:** 100% automated SAST (Bandit) scanning, Pytest unit coverage, and strict linting on every commit.
+- **Background Processing:** Heavy cloud telemetry scans are securely executed asynchronously via FastAPI background tasks.
+- **Isolated Execution:** Fully containerized and Kubernetes-ready.
 
-## Architecture
-
-1.  **Frontend:** Modern, dark-mode dashboard powered by Tailwind CSS, Chart.js, and Jinja2 templates.
-2.  **Backend:** FastAPI engine with SQLite database for session and scan history logging.
-3.  **Cloud Integration:** Boto3 (AWS SDK) with secure STS role assumption.
-4.  **DevSecOps Pipeline:** Fully Dockerized, verified by Pytest, and scanned by Bandit (SAST), integrated into GitHub Actions CI/CD.
-
-## Quick Start (Docker)
-
-The fastest way to deploy CloudSec Sentinel in an isolated environment:
+## Quick Start (Docker Deployment)
+Deploy safely in an isolated enterprise environment in seconds:
 
 ```bash
-# Clone the repository
-git clone [https://github.com/YOUR_USERNAME/CloudSec-Sentinel.git](https://github.com/YOUR_USERNAME/CloudSec-Sentinel.git)
+git clone [https://github.com/ertunckilic/CloudSec-Sentinel.git](https://github.com/ertunckilic/CloudSec-Sentinel.git)
 cd CloudSec-Sentinel
-
-# Setup Environment Variables
 cp .env.example .env
-# Edit .env with your desired admin credentials
 
-# Build and Run via Docker
-docker build -t cloudsec-sentinel .
+# Build and deploy the verified enterprise image
+docker build -t cloudsec-sentinel:latest .
 docker run -d -p 8000:8000 --env-file .env cloudsec-sentinel
 ```
+*Navigate to http://localhost:8000 to access the executive dashboard.*
 
-Navigate to `http://localhost:8000` and login with your configured credentials.
-
-## Manual Development Setup
-
-If you prefer running directly on your machine via Makefile:
-
-```bash
-make install
-make run
-```
-
-## Running Tests & Security Scans
-
-```bash
-# Run Unit Tests
-make test
-
-# Run SAST Security Scan
-make scan
-```
+## Enterprise & Commercial Licensing
+The core auditing engine is open-source. For RBAC (Role-Based Access Control), SOC2 compliance reporting, SIEM integrations (Splunk/Datadog), and premium support, please contact the repository owner for **CloudSec Sentinel Enterprise Edition**.
