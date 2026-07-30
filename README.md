@@ -10,6 +10,17 @@ CloudSec Sentinel is a zero-touch DevSecOps platform designed to autonomously de
 - **Zero-Touch Remediation:** Dynamically generates exact Terraform (.tf) patches to secure vulnerabilities in seconds.
 
 ## Core Architecture & Enterprise Security
+```mermaid
+graph TD
+    A[AWS Environment] -->|Continuous Telemetry| B(CloudSec Sentinel Core)
+    B -->|S3 & IAM Auditing| C{Risk Detected?}
+    C -->|Yes| D[Terraform Remediation Engine]
+    C -->|No| E[Continuous Monitoring]
+    D -->|Auto-Generated .tf Patches| F[Deployable Infrastructure]
+    B -->|EBS & EIP Scans| G[Cost Optimization Report]
+    F --> H[Executive Dashboard]
+    G --> H
+```
 CloudSec Sentinel is built for enterprise-scale reliability and strict compliance:
 - **Autonomous DevSecOps Pipeline:** Fully integrated CI/CD via GitHub Actions.
 - **Quality Gates:** 100% automated SAST (Bandit) scanning, Pytest unit coverage, and strict linting on every commit.
@@ -20,7 +31,7 @@ CloudSec Sentinel is built for enterprise-scale reliability and strict complianc
 Deploy safely in an isolated enterprise environment in seconds:
 
 ```bash
-git clone [https://github.com/ertunckilic/CloudSec-Sentinel.git](https://github.com/ertunckilic/CloudSec-Sentinel.git)
+git clone https://github.com/ertunckilic/CloudSec-Sentinel.git
 cd CloudSec-Sentinel
 cp .env.example .env
 
