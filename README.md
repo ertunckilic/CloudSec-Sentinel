@@ -42,4 +42,6 @@ docker run -d -p 8000:8000 --env-file .env cloudsec-sentinel
 *Navigate to http://localhost:8000 to access the executive dashboard.*
 
 ## Enterprise & Commercial Licensing
-The core auditing engine is open-source. For RBAC (Role-Based Access Control), SOC2 compliance reporting, SIEM integrations (Splunk/Datadog), and premium support, please contact the repository owner for **CloudSec Sentinel Enterprise Edition**.
+The core auditing engine is open-source. For RBAC (Role-Based Access Control), SOC2 compliance reporting, SIEM integrations (Splunk/Datadog), and priority support, you can instantly upgrade to our premium tier.
+
+**[Purchase CloudSec Sentinel Professional Edition](https://ertunckilic.gumroad.com/l/cloudsec-sentinel-pro)**
