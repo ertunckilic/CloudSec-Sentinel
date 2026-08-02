@@ -1,4 +1,4 @@
-﻿annotated-doc==0.0.4
+annotated-doc==0.0.4
 annotated-types==0.8.0
 anyio==4.14.2
 boto3==1.43.56
@@ -20,7 +20,7 @@ MarkupSafe==3.0.3
 pillow==12.3.0
 pycparser==3.0
 pydantic==2.13.4
-pydantic_core==2.46.4
+pydantic_core==2.47.0
 pydyf==0.12.1
 pyphen==0.17.2
 python-dateutil==2.9.0.post0
