@@ -1,4 +1,4 @@
-﻿annotated-doc==0.0.4
+annotated-doc==0.0.4
 annotated-types==0.8.0
 anyio==4.14.2
 boto3==1.43.56
@@ -35,7 +35,7 @@ types-s3transfer==0.16.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 urllib3==2.7.0
-uvicorn==0.51.0
+uvicorn==0.52.0
 weasyprint==69.0
 webencodings==0.5.1
 zopfli==0.4.3
